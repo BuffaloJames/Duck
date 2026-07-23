@@ -1,7 +1,9 @@
 """Django settings for Duck project."""
 
+import os
 from pathlib import Path
 import sys
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -9,9 +11,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-SECRET_KEY = "django-insecure-duck-card-game-secret-key-for-local-dev"
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-duck-card-game-secret-key-for-local-dev"
+)
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = ["*"]
 
@@ -27,6 +31,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -50,11 +55,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.duck_project.wsgi.application"
 
+# Database configuration using dj_database_url (PostgreSQL on Railway, SQLite locally)
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 LANGUAGE_CODE = "en-us"
@@ -63,8 +69,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CORS configuration for local React development
+# CORS configuration for React frontend development & cloud deployment
 CORS_ALLOW_ALL_ORIGINS = True
