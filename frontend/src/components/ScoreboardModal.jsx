@@ -13,47 +13,49 @@ export default function ScoreboardModal({ gameState, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="modal-title">🏆 Scoreboard Breakdown</h2>
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' }}>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
           Round {gameState.current_round} of {gameState.max_rounds} ({gameState.hand_size} Cards)
         </p>
 
-        <table className="score-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Bid</th>
-              <th>Won</th>
-              <th>Past Rounds</th>
-              <th>This Round</th>
-              <th>Total Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {players.map((p) => {
-              const exactBonus = p.has_exact_bonus;
-              return (
-                <tr key={p.player_id}>
-                  <td style={{ fontWeight: 700, textAlign: 'left' }}>
-                    {p.name} {p.is_human ? '(You)' : ''}
-                  </td>
-                  <td>{p.bid !== null ? p.bid : '-'}</td>
-                  <td>{p.tricks_won}</td>
-                  <td style={{ color: '#94a3b8' }}>{p.cumulative_score}</td>
-                  <td style={{ fontWeight: 600, color: exactBonus ? '#4ade80' : '#cbd5e1' }}>
-                    +{p.current_round_points} {exactBonus ? '🌟' : ''}
-                  </td>
-                  <td style={{ fontWeight: 800, color: '#e5b94c', fontSize: '1.05rem' }}>
-                    {p.score}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="score-table-responsive">
+          <table className="score-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Bid</th>
+                <th>Won</th>
+                <th>Past Rounds</th>
+                <th>This Round</th>
+                <th>Total Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((p) => {
+                const exactBonus = p.has_exact_bonus;
+                return (
+                  <tr key={p.player_id}>
+                    <td style={{ fontWeight: 700, textAlign: 'left' }}>
+                      {p.name} {p.is_human ? '(You)' : ''}
+                    </td>
+                    <td>{p.bid !== null ? p.bid : '-'}</td>
+                    <td>{p.tricks_won}</td>
+                    <td style={{ color: '#94a3b8' }}>{p.cumulative_score}</td>
+                    <td style={{ fontWeight: 600, color: exactBonus ? '#4ade80' : '#cbd5e1' }}>
+                      +{p.current_round_points} {exactBonus ? '🌟' : ''}
+                    </td>
+                    <td style={{ fontWeight: 800, color: '#e5b94c', fontSize: '1.05rem' }}>
+                      {p.score}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         <p
           style={{
-            marginTop: '1rem',
+            marginTop: '0.8rem',
             color: '#cbd5e1',
             fontSize: '0.8rem',
             fontStyle: 'italic',
@@ -64,7 +66,7 @@ export default function ScoreboardModal({ gameState, onClose }) {
 
         <button
           className="btn-primary"
-          style={{ marginTop: '1.5rem', width: 'auto', padding: '0.6rem 2rem' }}
+          style={{ marginTop: '1.25rem', width: 'auto', padding: '0.6rem 2rem' }}
           onClick={onClose}
         >
           Close Scoreboard

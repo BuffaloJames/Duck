@@ -6,25 +6,27 @@ export default function Navbar({ gameState, onOpenScoreboard, onOpenRules, onNew
 
   return (
     <header className="navbar">
-      <div className="brand-title">
-        <span>🦆 DUCK</span>
-        <span className="brand-badge">Cards</span>
+      <div className="navbar-left">
+        <div className="brand-title">
+          <span>🦆 DUCK</span>
+          <span className="brand-badge">Cards</span>
+        </div>
+
+        {gameState && (
+          <div className="game-info-pills">
+            <div className="info-pill">
+              <span>Round {currentRound} of 7</span>
+              <small>({handSize} {handSize === 1 ? 'card' : 'cards'})</small>
+            </div>
+
+            <div className="info-pill trump-spades">
+              <span>♠ Permanent Trump: Spades</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {gameState && (
-        <div className="game-info-pills">
-          <div className="info-pill">
-            <span>Round {currentRound} of 7</span>
-            <small>({handSize} {handSize === 1 ? 'card' : 'cards'})</small>
-          </div>
-
-          <div className="info-pill trump-spades">
-            <span>♠ Permanent Trump: Spades</span>
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="navbar-actions">
         <button className="btn-nav" onClick={onOpenRules}>
           📜 Rules
         </button>
