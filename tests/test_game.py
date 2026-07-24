@@ -158,5 +158,6 @@ class TestDuckGameSession:
 
         session._finish_round()
 
-        assert p1.score == 12  # 2 tricks + 10 bonus
-        assert p2.score == 3  # 3 tricks + 0 bonus
+        state = session.get_state_dict("p1")
+        assert state["players"][0]["score"] == 12  # 2 tricks + 10 bonus
+        assert state["players"][1]["score"] == 3  # 3 tricks + 0 bonus

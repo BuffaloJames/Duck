@@ -5,6 +5,7 @@ import GameBoard from './components/GameBoard';
 import BidModal from './components/BidModal';
 import ScoreboardModal from './components/ScoreboardModal';
 import RulesModal from './components/RulesModal';
+import DuckoAnimation from './components/DuckoAnimation';
 import * as api from './services/api';
 
 export default function App() {
@@ -13,12 +14,13 @@ export default function App() {
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [duckoPlayer, setDuckoPlayer] = useState(null);
+  const [lastDuckoRound, setLastDuckoRound] = useState(null);
 
   // Poll / step AI turns sequentially
   useEffect(() => {
     if (!sessionId || !gameState) return;
 
-    // Auto-step AI turns sequentially if currently AI's turn in playing phase
     const isAITurn =
       gameState.phase === 'PLAYING' &&
       gameState.current_turn_id !== gameState.players[0]?.player_id;
@@ -40,9 +42,33 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [sessionId, gameState]);
 
+  // Trigger Ducko animation ONLY when Human Player bids 0 & wins 0
+  useEffect(() => {
+    if (!gameState) return;
+
+    // Immediately clear animation if bidding phase starts
+    if (gameState.phase === 'BIDDING') {
+      setDuckoPlayer(null);
+      return;
+    }
+
+    const isRoundFinished =
+      gameState.phase === 'ROUND_OVER' || gameState.phase === 'GAME_OVER';
+
+    if (isRoundFinished && lastDuckoRound !== gameState.current_round) {
+      const humanPlayer = gameState.players.find((p) => p.is_human);
+      if (humanPlayer && humanPlayer.bid === 0 && humanPlayer.tricks_won === 0) {
+        setDuckoPlayer(humanPlayer.name);
+        setLastDuckoRound(gameState.current_round);
+      }
+    }
+  }, [gameState, lastDuckoRound]);
+
   const handleStartGame = async (playerCount, playerName, difficulty) => {
     try {
       setErrorMsg(null);
+      setDuckoPlayer(null);
+      setLastDuckoRound(null);
       const state = await api.createGame(playerCount, playerName, difficulty);
       setSessionId(state.session_id);
       setGameState(state);
@@ -77,6 +103,7 @@ export default function App() {
     if (!sessionId) return;
     try {
       setErrorMsg(null);
+      setDuckoPlayer(null); // Instantly dismiss Ducko animation when advancing hand
       const updatedState = await api.advanceRound(sessionId);
       setGameState(updatedState);
     } catch (err) {
@@ -88,6 +115,8 @@ export default function App() {
     setSessionId(null);
     setGameState(null);
     setErrorMsg(null);
+    setDuckoPlayer(null);
+    setLastDuckoRound(null);
   };
 
   const humanPlayer = gameState?.players?.[0];
@@ -152,6 +181,14 @@ export default function App() {
       {/* Rules Modal */}
       {showRules && (
         <RulesModal onClose={() => setShowRules(false)} />
+      )}
+
+      {/* Ducko Flying Animation Component */}
+      {duckoPlayer && (
+        <DuckoAnimation
+          playerName={duckoPlayer}
+          onComplete={() => setDuckoPlayer(null)}
+        />
       )}
     </div>
   );

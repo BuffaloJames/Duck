@@ -39,7 +39,7 @@ class PlayerState:
 
     def commit_round_score(self) -> None:
         """Commit current round points into cumulative score before resetting round."""
-        self.cumulative_score += self.current_round_points
+        self.cumulative_score += self.get_current_round_points(round_completed=True)
 
     def reset_for_round(self) -> None:
         """Reset player bid and tricks won for a new round."""
@@ -52,33 +52,61 @@ class PlayerState:
         """Check if player matched their exact prediction bid."""
         return self.current_bid is not None and self.tricks_won == self.current_bid
 
-    @property
-    def current_round_points(self) -> int:
-        """Calculate points earned so far in current round including bonus."""
+    def get_has_exact_bonus(self, round_completed: bool = False) -> bool:
+        """Check if player matched exact prediction bid when round is completed.
+
+        Args:
+            round_completed: True if current round is complete.
+
+        Returns:
+            True if exact match and round is complete, False otherwise.
+        """
+        if not round_completed:
+            return False
+        return self.has_exact_bonus
+
+    def get_current_round_points(self, round_completed: bool = False) -> int:
+        """Calculate points earned in current round.
+
+        Args:
+            round_completed: True if current round is complete.
+
+        Returns:
+            Integer points earned in current round.
+        """
         pts = self.tricks_won
-        if self.has_exact_bonus:
+        if self.get_has_exact_bonus(round_completed):
             pts += 10
         return pts
 
     @property
     def total_score(self) -> int:
-        """Calculate overall total score (cumulative from past rounds + current round)."""
-        return self.cumulative_score + self.current_round_points
+        """Calculate overall total score."""
+        return self.cumulative_score + self.get_current_round_points(
+            round_completed=False
+        )
 
     @property
     def score(self) -> int:
         """Alias property for total_score."""
         return self.total_score
 
-    def to_dict(self, reveal_hand: bool = True) -> Dict[str, Any]:
+    def to_dict(
+        self, reveal_hand: bool = True, round_completed: bool = False
+    ) -> Dict[str, Any]:
         """Convert player state to dictionary.
 
         Args:
             reveal_hand: True to include full card details, False to hide.
+            round_completed: True if round is complete for score bonus.
 
         Returns:
             Dictionary with player information.
         """
+        round_pts = self.get_current_round_points(round_completed=round_completed)
+        exact_bonus = self.get_has_exact_bonus(round_completed=round_completed)
+        total = self.cumulative_score + round_pts
+
         return {
             "player_id": self.player_id,
             "name": self.name,
@@ -89,9 +117,9 @@ class PlayerState:
             "bid": self.current_bid,
             "tricks_won": self.tricks_won,
             "cumulative_score": self.cumulative_score,
-            "current_round_points": self.current_round_points,
-            "score": self.total_score,
-            "has_exact_bonus": self.has_exact_bonus,
+            "current_round_points": round_pts,
+            "score": total,
+            "has_exact_bonus": exact_bonus,
         }
 
 
@@ -405,6 +433,7 @@ class DuckGameSession:
         )
         current_turn_player = self.players[self.current_turn_idx]
         bidding_turn_player = self.players[self.bidding_turn_idx]
+        is_round_completed = self.phase in ("ROUND_OVER", "GAME_OVER")
 
         return {
             "current_round": self.current_round,
@@ -417,7 +446,10 @@ class DuckGameSession:
             "current_trick": current_trick_data,
             "last_completed_trick": last_completed_trick_data,
             "players": [
-                p.to_dict(reveal_hand=(p.player_id == for_player_id))
+                p.to_dict(
+                    reveal_hand=(p.player_id == for_player_id),
+                    round_completed=is_round_completed,
+                )
                 for p in self.players
             ],
             "trick_history": self.trick_history,
